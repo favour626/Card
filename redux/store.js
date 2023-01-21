@@ -1,4 +1,7 @@
 import { createStore } from "redux";
-import { gameReducer } from "./reducers/TileReducers";
+import reducer from "./reducers/index";
 
-export const store = createStore(gameReducer);
+export default function configureStore(initialState) {
+  const store = createStore(reducer, initialState);
+  return store;
+}

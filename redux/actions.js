@@ -1,11 +1,5 @@
 export const RESET_GAME = "RESET_GAME";
 export const SELECT_TILE = "SELECT_TILE";
-
-export const resetGame = () => ({
-  type: RESET_GAME,
-});
-
-export const selectTile = (index) => ({
-  type: SELECT_TILE,
-  index,
-});
+export const UPDATE_CARD_STATE = "UPDATE_CARD_STATE";
+export const COMPLETED = "COMPLETED";
+export const UPDATE_CLICK_STATE = "UPDATE_CLICK_STATE";

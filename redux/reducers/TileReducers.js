@@ -1,62 +1,45 @@
-import { RESET_GAME, SELECT_TILE } from "./actions";
-
-const NUM_OBJECTS = 8;
+import { generateInitialCards } from "../../utils/generateInitialCards";
+import { COMPLETED, RESET_GAME, UPDATE_CARD_STATE, UPDATE_CLICK_STATE } from "../actions";
 
 const initialState = {
-  objects: [],
-  revealedTiles: [],
-  selectedTile: null,
-  score: 0,
+  cards: [],
+  clicks: 0,
+  completed: false,
 };
 
-export const gameReducer = (state = initialState, action) => {
+export const TileReducer = (state = initialState, action) => {
   switch (action.type) {
     case RESET_GAME:
+      console.log("startGame()", state.cards);
+
       return {
-        ...state,
-        objects: generateObjects(),
-        revealedTiles: [],
-        selectedTile: null,
-        score: 0,
+        cards: generateInitialCards(),
+        clicks: 0,
       };
-    case SELECT_TILE:
-      if (state.revealedTiles.includes(action.index)) {
-        return state;
-      }
-      if (state.selectedTile === null) {
+
+    case UPDATE_CARD_STATE:
+      const item = action.payload;
+      console.log("bruh", item);
+
+      const existItem = state.cards === item.cards;
+      if (existItem) {
         return {
           ...state,
-          revealedTiles: [...state.revealedTiles, action.index],
-          selectedTile: action.index,
         };
+      } else {
+        return { ...state, cards: item.cards };
       }
-      return {
-        ...state,
-        revealedTiles: [...state.revealedTiles, action.index],
-        selectedTile: null,
-        score:
-          state.objects[state.selectedTile] === state.objects[action.index]
-            ? state.score + 1
-            : state.score,
-      };
+
+    case UPDATE_CLICK_STATE:
+      const click = action.payload;
+      console.log("bruh", click);
+
+      return { ...state, clicks: click.clicks };
+
+    case COMPLETED:
+      return { ...state, completed: true };
+
     default:
       return state;
   }
-};
-
-const generateObjects = () => {
-  const objects = [];
-  for (let i = 0; i < NUM_OBJECTS; i++) {
-    objects.push(i);
-    objects.push(i);
-  }
-  return shuffle(objects);
-};
-
-const shuffle = (array) => {
-  for (let i = array.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [array[i], array[j]] = [array[j], array[i]];
-  }
-  return array;
 };
