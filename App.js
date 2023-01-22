@@ -16,7 +16,7 @@ import { color } from "./style/color";
 import { InfoModal } from "./components/InfoModal";
 import { LinearGradient } from "expo-linear-gradient";
 import { Provider, useDispatch, useSelector } from "react-redux";
-import { RESET_GAME } from "./redux/actions";
+import { RESET_GAME, UPDATE_VISIBLE_STATE } from "./redux/actions";
 import configureStore from "./redux/store";
 
 export default function App() {
@@ -57,9 +57,17 @@ function Apple() {
       type: RESET_GAME,
     });
 
+  const setVisible = () =>
+    dispatch({
+      type: UPDATE_VISIBLE_STATE,
+    });
+
   React.useEffect(() => {
     console.log("start");
     reset();
+    setTimeout(() => {
+      setVisible();
+    }, 3000);
   }, []);
 
   return (
@@ -67,7 +75,7 @@ function Apple() {
       <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} />
 
       <LinearGradient
-        colors={[color.dark, color.purple]}
+        colors={[color.red, color.blue]}
         useAngle={true}
         angle={135}
         style={[styles.container]}
@@ -111,11 +119,16 @@ function Apple() {
             styles.restartPressable,
             {
               backgroundColor: pressed
-                ? color.blue
+                ? color.teal
                 : "rgba(255, 255, 255, 0.1)",
             },
           ]}
-          onPress={() => reset()}
+          onPress={() => {
+            reset();
+            setTimeout(() => {
+              setVisible();
+            }, 3000);
+          }}
         >
           <Text style={[textStyleTop, styles.text]}>restart</Text>
         </Pressable>
@@ -127,6 +140,9 @@ function Apple() {
         <WinOverlayTouch
           onClose={() => {
             reset();
+            setTimeout(() => {
+              setVisible();
+            }, 3000);
           }}
         />
       )}
@@ -169,9 +185,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     letterSpacing: 5,
   },
-  textBottom: {
-    
-  },
+  textBottom: {},
   infoPressable: {
     justifyContent: "center",
     alignItems: "center",

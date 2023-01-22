@@ -1,5 +1,11 @@
 import { generateInitialCards } from "../../utils/generateInitialCards";
-import { COMPLETED, RESET_GAME, UPDATE_CARD_STATE, UPDATE_CLICK_STATE } from "../actions";
+import {
+  COMPLETED,
+  RESET_GAME,
+  UPDATE_CARD_STATE,
+  UPDATE_CLICK_STATE,
+  UPDATE_VISIBLE_STATE,
+} from "../actions";
 
 const initialState = {
   cards: [],
@@ -19,7 +25,7 @@ export const TileReducer = (state = initialState, action) => {
 
     case UPDATE_CARD_STATE:
       const item = action.payload;
-      console.log("bruh", item);
+      console.log("bruh", state.cards);
 
       const existItem = state.cards === item.cards;
       if (existItem) {
@@ -29,6 +35,13 @@ export const TileReducer = (state = initialState, action) => {
       } else {
         return { ...state, cards: item.cards };
       }
+
+    case UPDATE_VISIBLE_STATE:
+      state.cards.map((item) => {
+        item.cardState = "Invisible";
+      });
+
+      return { ...state };
 
     case UPDATE_CLICK_STATE:
       const click = action.payload;

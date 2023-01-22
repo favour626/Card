@@ -19,7 +19,7 @@ function shuffleArray(array) {
 }
 
 const Tile = (cardType, index) => {
-  return { cardType: cardType, cardState: "Invisible", index: index };
+  return { cardType: cardType, cardState: "Visible", index: index };
 };
 
 export function generateInitialCards() {

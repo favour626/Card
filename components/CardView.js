@@ -3,7 +3,11 @@ import { Pressable, StyleSheet, View } from "react-native";
 import Icon from "@expo/vector-icons/FontAwesome";
 import { CardState } from "../utils/CardState";
 import { color } from "../style/color";
-import { COMPLETED, UPDATE_CARD_STATE, UPDATE_CLICK_STATE } from "../redux/actions";
+import {
+  COMPLETED,
+  UPDATE_CARD_STATE,
+  UPDATE_CLICK_STATE,
+} from "../redux/actions";
 import { useDispatch, useSelector } from "react-redux";
 import { useMatchAnimation, useNoMatchAnimation } from "../utils/animationfunc";
 import Animated from "react-native-reanimated";
@@ -15,7 +19,6 @@ const BACKGROUND_COLOR_NOT_MATCHED = color.red;
 
 const NO_MATCH_STEP_DURATION = 120;
 const NO_MATCH_ANIMATION_DURATION = NO_MATCH_STEP_DURATION * 5;
-
 
 const CardView = ({ card, cardSize, margin }) => {
   const { runMatchAnimation, matchAnimationStyle } = useMatchAnimation();
@@ -36,7 +39,6 @@ const CardView = ({ card, cardSize, margin }) => {
       },
     });
 
-  
   const addClick = (clicks) =>
     dispatch({
       type: UPDATE_CLICK_STATE,
@@ -44,13 +46,12 @@ const CardView = ({ card, cardSize, margin }) => {
         clicks: clicks,
       },
     });
-  
+
   const complete = () =>
     dispatch({
       type: COMPLETED,
     });
-  
-  
+
   const [click, setClicks] = useState(clicks);
   const [Cards, setCards] = useState(cards);
 
@@ -58,9 +59,9 @@ const CardView = ({ card, cardSize, margin }) => {
     addPoint(Cards);
   }, [Cards]);
 
-   React.useEffect(() => {
-     addClick(clicks + 1);
-   }, [click]);
+  React.useEffect(() => {
+    addClick(clicks + 1);
+  }, [click]);
 
   const onClick = () => {
     if (card.cardState === CardState.Invisible) {
@@ -81,7 +82,7 @@ const CardView = ({ card, cardSize, margin }) => {
   };
 
   const makeVisible = (index) => {
-    const change = cards;
+    const change = [...cards];
     const tidy = change.find((card) => card.index === index);
     tidy.cardState = CardState.Visible;
     setCards(change);
@@ -100,7 +101,7 @@ const CardView = ({ card, cardSize, margin }) => {
     tidy.cardState = CardState.NotMatched;
     setTimeout(() => {
       tidy.cardState = CardState.Invisible;
-      console.log(tidy);
+      console.log("hide");
       setCards(change);
     }, NO_MATCH_ANIMATION_DURATION);
   };
