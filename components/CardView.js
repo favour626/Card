@@ -2,8 +2,7 @@ import React, { useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import Icon from "@expo/vector-icons/FontAwesome";
 import { CardState } from "../utils/CardState";
-import { color } from "../style/color";
-import { addClick, addPoint, complete } from "../redux/actions";
+import { addClick } from "../redux/actions";
 import { useDispatch, useSelector } from "react-redux";
 import { useMatchAnimation, useNoMatchAnimation } from "../utils/animationfunc";
 import Animated, {
@@ -14,16 +13,16 @@ import Animated, {
 } from "react-native-reanimated";
 import {
   backgroundColor,
+  evaluateMatch,
   flippedCards,
-  isCompleted,
   isInvisible,
   isMatched,
   isNotMatched,
+  makeVisible,
   notMatchedCards,
 } from "../utils/game";
 
 const NO_MATCH_STEP_DURATION = 120;
-const NO_MATCH_ANIMATION_DURATION = NO_MATCH_STEP_DURATION * 5;
 
 const CardView = ({ card, cardSize, margin }) => {
   const { runMatchAnimation, matchAnimationStyle } = useMatchAnimation();
@@ -32,7 +31,7 @@ const CardView = ({ card, cardSize, margin }) => {
   const { runNoMatchAnimation, noMatchAnimationStyle } = useNoMatchAnimation();
   runNoMatchAnimation.value = isNotMatched(card);
 
-  const offset = useSharedValue(0);
+ const offset = useSharedValue(0);
 
   const flip = useAnimatedStyle(() => {
     offset.value = 0;
@@ -55,82 +54,29 @@ const CardView = ({ card, cardSize, margin }) => {
 
   const dispatch = useDispatch();
 
-  const [click, setClicks] = useState(clicks);
-  const [Cards, setCards] = useState(cards);
+  const onClick = (card, cards, clicks) => {
+   if (card.cardState === CardState.Invisible) {
+     const visibleCards = flippedCards(cards);
 
-  React.useEffect(() => {
-    addPoint(Cards, dispatch);
-  }, [Cards]);
+     if (visibleCards.length !== 2 && notMatchedCards(cards).length == 0) {
+       offset.value = Math.random();
+     }
+     console.log("onClick() card", card.cardType);
+     // if (!this.timer.isStarted) {
+     //   this.timer.start()
+     // }
+     if (notMatchedCards(cards).length > 0) {
+       // Ignore clicks while cards are not matched (ie red)
+       return;
+     }
+     addClick(clicks + 1, dispatch);
+     makeVisible(card.index, cards, dispatch);
+     evaluateMatch(cards, dispatch);
+   } else {
+     console.log("onClick() ignored");
+   }
+ };
 
-  React.useEffect(() => {
-    addClick(clicks + 1, dispatch);
-  }, [click]);
-
-  const onClick = (card, cards, click) => {
-    if (card.cardState === CardState.Invisible) {
-      const visibleCards = flippedCards(cards);
-
-      if (visibleCards.length !== 2 && notMatchedCards(cards).length == 0) {
-        offset.value = Math.random();
-      }
-      console.log("onClick() card", card.cardType);
-      // if (!this.timer.isStarted) {
-      //   this.timer.start()
-      // }
-      if (notMatchedCards(cards).length > 0) {
-        // Ignore clicks while cards are not matched (ie red)
-        return;
-      }
-      setClicks(click + 1);
-        makeVisible(card.index);
-        evaluateMatch(cards);
-
-    } else {
-      console.log("onClick() ignored");
-    }
-  };
-
-  const makeVisible = (index) => {
-    const change = [...cards];
-    const tidy = change.find((card) => card.index === index);
-    tidy.cardState = CardState.Visible;
-    addPoint(change, dispatch);
-  };
-
-  const makeMatched = (index) => {
-    const change = cards;
-    const tidy = change.find((card) => card.index === index);
-    tidy.cardState = CardState.Matched;
-    addPoint(change, dispatch);
-  };
-
-  const hide = (index) => {
-    const change = cards;
-    const tidy = change.find((card) => card.index === index);
-    tidy.cardState = CardState.NotMatched;
-    setTimeout(() => {
-      tidy.cardState = CardState.Invisible;
-      addPoint(change, dispatch);
-    }, NO_MATCH_ANIMATION_DURATION);
-  };
-
-  const evaluateMatch = (cards) => {
-    const visibleCards = flippedCards(cards);
-    if (visibleCards.length !== 2) {
-      return;
-    }
-    if (visibleCards[0].cardType === visibleCards[1].cardType) {
-      makeMatched(visibleCards[0].index);
-      makeMatched(visibleCards[1].index);
-      if (isCompleted(cards)) {
-        // this.timer.stop();
-        complete(dispatch);
-      }
-    } else {
-      hide(visibleCards[0].index);
-      hide(visibleCards[1].index);
-    }
-  };
 
   return (
     <Animated.View style={[matchAnimationStyle, noMatchAnimationStyle, flip]}>
@@ -145,7 +91,7 @@ const CardView = ({ card, cardSize, margin }) => {
           },
         ]}
         onPress={() => {
-          onClick(card, cards, click);
+          onClick(card, cards, clicks);
         }}
       >
         {!isInvisible(card) && (
