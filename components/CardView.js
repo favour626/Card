@@ -3,11 +3,7 @@ import { Pressable, StyleSheet, View } from "react-native";
 import Icon from "@expo/vector-icons/FontAwesome";
 import { CardState } from "../utils/CardState";
 import { color } from "../style/color";
-import {
-  COMPLETED,
-  UPDATE_CARD_STATE,
-  UPDATE_CLICK_STATE,
-} from "../redux/actions";
+import { addClick, addPoint, complete } from "../redux/actions";
 import { useDispatch, useSelector } from "react-redux";
 import { useMatchAnimation, useNoMatchAnimation } from "../utils/animationfunc";
 import Animated, {
@@ -16,11 +12,15 @@ import Animated, {
   withSequence,
   withTiming,
 } from "react-native-reanimated";
-
-const BACKGROUND_COLOR_INVISIBLE = color.dark;
-const BACKGROUND_COLOR_VISIBLE = color.blue;
-const BACKGROUND_COLOR_MATCHED = color.teal;
-const BACKGROUND_COLOR_NOT_MATCHED = color.red;
+import {
+  backgroundColor,
+  flippedCards,
+  isCompleted,
+  isInvisible,
+  isMatched,
+  isNotMatched,
+  notMatchedCards,
+} from "../utils/game";
 
 const NO_MATCH_STEP_DURATION = 120;
 const NO_MATCH_ANIMATION_DURATION = NO_MATCH_STEP_DURATION * 5;
@@ -52,46 +52,25 @@ const CardView = ({ card, cardSize, margin }) => {
   });
 
   const { cards, clicks } = useSelector((state) => state.TileReducer);
+
   const dispatch = useDispatch();
-
-  // add point for player 1, redo later
-  const addPoint = (cards) =>
-    dispatch({
-      type: UPDATE_CARD_STATE,
-      payload: {
-        cards: cards,
-      },
-    });
-
-  const addClick = (clicks) =>
-    dispatch({
-      type: UPDATE_CLICK_STATE,
-      payload: {
-        clicks: clicks,
-      },
-    });
-
-  const complete = () =>
-    dispatch({
-      type: COMPLETED,
-    });
 
   const [click, setClicks] = useState(clicks);
   const [Cards, setCards] = useState(cards);
 
   React.useEffect(() => {
-    addPoint(Cards);
+    addPoint(Cards, dispatch);
   }, [Cards]);
 
   React.useEffect(() => {
-    addClick(clicks + 1);
+    addClick(clicks + 1, dispatch);
   }, [click]);
 
-  const onClick = () => {
+  const onClick = (card, cards, click) => {
     if (card.cardState === CardState.Invisible) {
       const visibleCards = flippedCards(cards);
 
-      if (visibleCards.length !== 2 && notMatchedCards(cards).length == 0 ) {
+      if (visibleCards.length !== 2 && notMatchedCards(cards).length == 0) {
         offset.value = Math.random();
       }
       console.log("onClick() card", card.cardType);
@@ -103,8 +82,8 @@ const CardView = ({ card, cardSize, margin }) => {
         return;
       }
       setClicks(click + 1);
-      setTimeout(()=> {      makeVisible(card.index);
-      evaluateMatch();}, 60)
+        makeVisible(card.index);
+        evaluateMatch(cards);
 
     } else {
       console.log("onClick() ignored");
@@ -115,14 +94,14 @@ const CardView = ({ card, cardSize, margin }) => {
     const change = [...cards];
     const tidy = change.find((card) => card.index === index);
     tidy.cardState = CardState.Visible;
-    setCards(change);
+    addPoint(change, dispatch);
   };
 
   const makeMatched = (index) => {
     const change = cards;
     const tidy = change.find((card) => card.index === index);
     tidy.cardState = CardState.Matched;
-    setCards(change);
+    addPoint(change, dispatch);
   };
 
   const hide = (index) => {
@@ -131,36 +110,11 @@ const CardView = ({ card, cardSize, margin }) => {
     tidy.cardState = CardState.NotMatched;
     setTimeout(() => {
       tidy.cardState = CardState.Invisible;
-      setCards(change);
+      addPoint(change, dispatch);
     }, NO_MATCH_ANIMATION_DURATION);
   };
 
-  const isInvisible = (card) => {
-    return card.cardState === CardState.Invisible;
-  };
-  const isVisible = (card) => {
-    return card.cardState === CardState.Visible;
-  };
-  function isMatched(card) {
-    return card.cardState === CardState.Matched;
-  }
-  function isNotMatched(card) {
-    return card.cardState === CardState.NotMatched;
-  }
-  const backgroundColor = () => {
-    switch (card.cardState) {
-      case CardState.Invisible:
-        return BACKGROUND_COLOR_INVISIBLE;
-      case CardState.Visible:
-        return BACKGROUND_COLOR_VISIBLE;
-      case CardState.Matched:
-        return BACKGROUND_COLOR_MATCHED;
-      case CardState.NotMatched:
-        return BACKGROUND_COLOR_NOT_MATCHED;
-    }
-  };
-
-  const evaluateMatch = () => {
+  const evaluateMatch = (cards) => {
     const visibleCards = flippedCards(cards);
     if (visibleCards.length !== 2) {
       return;
@@ -170,24 +124,12 @@ const CardView = ({ card, cardSize, margin }) => {
       makeMatched(visibleCards[1].index);
       if (isCompleted(cards)) {
         // this.timer.stop();
-        complete();
+        complete(dispatch);
       }
     } else {
       hide(visibleCards[0].index);
       hide(visibleCards[1].index);
     }
-  };
-
-  const isCompleted = (cards) => {
-    return cards.every((card) => isMatched(card));
-  };
-
-  const notMatchedCards = (cards) => {
-    return cards.filter((card) => isNotMatched(card));
-  };
-
-  const flippedCards = (cards) => {
-    return cards.filter((card) => isVisible(card));
   };
 
   return (
@@ -199,11 +141,11 @@ const CardView = ({ card, cardSize, margin }) => {
             width: cardSize,
             height: cardSize,
             margin: margin,
-            backgroundColor: backgroundColor(),
+            backgroundColor: backgroundColor(card),
           },
         ]}
         onPress={() => {
-          onClick();
+          onClick(card, cards, click);
         }}
       >
         {!isInvisible(card) && (
