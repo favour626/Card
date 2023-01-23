@@ -10,7 +10,12 @@ import {
 } from "../redux/actions";
 import { useDispatch, useSelector } from "react-redux";
 import { useMatchAnimation, useNoMatchAnimation } from "../utils/animationfunc";
-import Animated from "react-native-reanimated";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withTiming,
+} from "react-native-reanimated";
 
 const BACKGROUND_COLOR_INVISIBLE = color.dark;
 const BACKGROUND_COLOR_VISIBLE = color.blue;
@@ -26,6 +31,25 @@ const CardView = ({ card, cardSize, margin }) => {
 
   const { runNoMatchAnimation, noMatchAnimationStyle } = useNoMatchAnimation();
   runNoMatchAnimation.value = isNotMatched(card);
+
+  const offset = useSharedValue(0);
+
+  const flip = useAnimatedStyle(() => {
+    offset.value = 0;
+    return {
+      transform: [
+        {
+          scaleX: withSequence(
+            withTiming(0.3, { duration: NO_MATCH_STEP_DURATION }),
+            withTiming(-0.3, {
+              duration: 30,
+            }),
+            withTiming(1, { duration: NO_MATCH_STEP_DURATION * 1.8 })
+          ),
+        },
+      ],
+    };
+  });
 
   const { cards, clicks } = useSelector((state) => state.TileReducer);
   const dispatch = useDispatch();
@@ -65,6 +89,11 @@ const CardView = ({ card, cardSize, margin }) => {
 
   const onClick = () => {
     if (card.cardState === CardState.Invisible) {
+      const visibleCards = flippedCards(cards);
+
+      if (visibleCards.length !== 2 && notMatchedCards(cards).length == 0 ) {
+        offset.value = Math.random();
+      }
       console.log("onClick() card", card.cardType);
       // if (!this.timer.isStarted) {
       //   this.timer.start()
@@ -74,8 +103,9 @@ const CardView = ({ card, cardSize, margin }) => {
         return;
       }
       setClicks(click + 1);
-      makeVisible(card.index);
-      evaluateMatch();
+      setTimeout(()=> {      makeVisible(card.index);
+      evaluateMatch();}, 60)
+
     } else {
       console.log("onClick() ignored");
     }
@@ -101,7 +131,6 @@ const CardView = ({ card, cardSize, margin }) => {
     tidy.cardState = CardState.NotMatched;
     setTimeout(() => {
       tidy.cardState = CardState.Invisible;
-      console.log("hide");
       setCards(change);
     }, NO_MATCH_ANIMATION_DURATION);
   };
@@ -162,7 +191,7 @@ const CardView = ({ card, cardSize, margin }) => {
   };
 
   return (
-    <Animated.View style={[matchAnimationStyle, noMatchAnimationStyle]}>
+    <Animated.View style={[matchAnimationStyle, noMatchAnimationStyle, flip]}>
       <Pressable
         style={[
           styles.container,

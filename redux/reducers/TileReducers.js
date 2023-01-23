@@ -16,8 +16,6 @@ const initialState = {
 export const TileReducer = (state = initialState, action) => {
   switch (action.type) {
     case RESET_GAME:
-      console.log("startGame()", state.cards);
-
       return {
         cards: generateInitialCards(),
         clicks: 0,
@@ -25,7 +23,6 @@ export const TileReducer = (state = initialState, action) => {
 
     case UPDATE_CARD_STATE:
       const item = action.payload;
-      console.log("bruh", state.cards);
 
       const existItem = state.cards === item.cards;
       if (existItem) {
@@ -45,7 +42,6 @@ export const TileReducer = (state = initialState, action) => {
 
     case UPDATE_CLICK_STATE:
       const click = action.payload;
-      console.log("bruh", click);
 
       return { ...state, clicks: click.clicks };
 
