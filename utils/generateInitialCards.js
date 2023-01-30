@@ -23,7 +23,6 @@ const Tile = (cardType, index) => {
 };
 
 export function generateInitialCards() {
-  console.log('hi')
   const cards = cardTypes.map((cardType, index) => Tile(cardType, index))
   return shuffleArray(cards)
 }

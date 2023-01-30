@@ -1,126 +1,133 @@
+import AnimatedLottieView from "lottie-react-native";
 import * as React from "react";
+import Icon from "@expo/vector-icons/FontAwesome";
 import {
-  Animated,
-  Easing,
-  PanResponder,
   StyleSheet,
   Text,
   useWindowDimensions,
   View,
 } from "react-native";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { color } from "../style/color";
+import Animated, {
+  Easing,
+  runOnJS,
+  useAnimatedGestureHandler,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from "react-native-reanimated";
+
+import { PanGestureHandler } from "react-native-gesture-handler";
 
 /**
  * It immediately, automatically shows when rendered. Then you swipe up to close
  * it, which invokes `onClose`.
  */
 export const WinOverlayTouch = ({ onClose }) => {
+  const dispatch = useDispatch();
+
+  const reset = () =>
+    dispatch({
+      type: RESET_GAME,
+    });
+
   const { height: screenHeight } = useWindowDimensions();
 
-  const animatedBottomRef = React.useRef(new Animated.Value(screenHeight));
-  // Examples: https://reactnative.dev/docs/panresponder
-  // https://stackoverflow.com/questions/59784486/how-to-setoffset-for-panresponder-when-using-hooks
-  const panResponder = React.useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onStartShouldSetPanResponderCapture: () => true,
-      onMoveShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponderCapture: () => true,
-
-      onPanResponderGrant: (_event, _gestureState) => {
-        // console.log('_value', animatedBottomRef.current._value)
-        // @ts-ignore
-        animatedBottomRef.current.setOffset(animatedBottomRef.current._value);
-      },
-
-      onPanResponderMove: (event, gestureState) => {
-        // console.log(
-        //   'screenHeight',
-        //   screenHeight,
-        //   'gestureState.y0',
-        //   gestureState.y0,
-        //   'gestureState.dy',
-        //   gestureState.dy,
-        //   'gestureState.moveY',
-        //   gestureState.moveY,
-        //   'animatedBottomRef.current',
-        //   animatedBottomRef.current,
-        // )
-        animatedBottomRef.current.setValue(-gestureState.dy);
-      },
-
-      onPanResponderRelease: (event, gestureState) => {
-        // console.log(
-        //   'gestureState.dy',
-        //   gestureState.dy,
-        //   'gestureState.vy',
-        //   gestureState.vy,
-        // )
-        if (gestureState.dy < -180 || Math.abs(gestureState.vy) > 0.5) {
-          // Hide animation
-          Animated.timing(animatedBottomRef.current, {
-            toValue: screenHeight,
-            duration: 300,
-            easing: Easing.linear,
-            useNativeDriver: false,
-          }).start(() => {
-            onClose();
-          });
-        } else {
-          animatedBottomRef.current.flattenOffset();
-          // Move down back to the bottom
-          Animated.timing(animatedBottomRef.current, {
-            toValue: 0,
-            duration: 100,
-            easing: Easing.cubic,
-            useNativeDriver: false,
-          }).start();
-        }
-      },
-    })
-  ).current;
-
-  React.useEffect(() => {
+  React.useEffect(() => { 
     // Automatically show overlay when it's rendered
-    Animated.timing(animatedBottomRef.current, {
-      toValue: 0,
-      duration: 800,
-      easing: Easing.out(Easing.cubic),
-      useNativeDriver: false, // 'top' is not supported by native animated module
-    }).start();
+    y.value = -731
+    y.value = withSpring(0, { duration: 500, easing: Easing.out(Easing.exp) });
   }, [screenHeight]);
 
-  const bottom = animatedBottomRef.current;
-  // console.log('bottom', bottom)
+  const pressed = useSharedValue(false);
+  const startingPosition = 0;
+  const x = useSharedValue(startingPosition);
+  const y = useSharedValue(startingPosition);
 
-    const { clicks } = useSelector(
-      (state) => state.TileReducer
-    );
+  const handleAnimationEnd = (finished) => {if (finished) { onClose() }
+}
+  const eventHandler = useAnimatedGestureHandler({
+    onStart: (event, ctx) => {
+      pressed.value = true;
+    },
+
+    onActive: (event, ctx) => {
+      x.value = startingPosition + event.translationX;
+      y.value = startingPosition + event.translationY;
+      console.log(x.value, y.value)
+
+    },
+
+    onEnd: (event, ctx) => {
+      pressed.value = false;
+      x.value = withSpring(startingPosition);
+      y.value = withSpring(startingPosition);
+      if (y.value < -200) {
+        y.value = withTiming(-731, {}, (finished) => runOnJS(handleAnimationEnd)(finished))
+        };
+      }
+  });
+
+  const ball = useAnimatedStyle(() => {
+    return {
+      transform: [{ translateX: x.value }, { translateY: y.value }],
+    };
+  });
+
+  const balls = useAnimatedStyle(() => {
+    return {
+      backgroundColor: pressed.value ? "indigo" : "orange",
+      transform: [{ scale: pressed.value ? 1.2 : 1 }],
+    };
+  });
+
+  const { clicks } = useSelector((state) => state.TileReducer);
 
   const message = `With ${Math.floor(clicks / 2)} moves and seconds.`;
-  // console.log(game.moves)
+
   return (
-    <Animated.View style={[styles.main, { height: screenHeight, bottom }]}>
-      <Text style={styles.title}>Congratulations! You won!</Text>
-      <Text style={styles.text}>{message}</Text>
-      <Text style={styles.text}>Wooohooo!</Text>
-      <View {...panResponder.panHandlers} style={styles.moveUp}>
-        <Text>Move up</Text>
+    <Animated.View style={[styles.main, ball, { height: screenHeight }]}>
+      <View
+        style={{
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: "#eb6e00",
+          width: "75%",
+          height: "65%",
+          borderRadius: 20,
+          paddingVertical: 20,
+        }}
+      >
+        <View style={{ width: "75%", height: "65%", marginTop: 5 }}>
+          <AnimatedLottieView
+            source={require("../assets/meditation-skull.json")}
+            autoPlay
+            loop
+          />
+        </View>
+        <Text style={styles.title}>Congrats! You Won!</Text>
+        <Text style={styles.text}>{message}</Text>
+        <Text style={styles.text}>Wooohooo!</Text>
+
+        <PanGestureHandler onGestureEvent={eventHandler}>
+          <Animated.View
+            style={[styles.moveUp, balls, { backgroundColor: "orange" }]}
+          >
+              <Icon name="arrow-up" size={30} color="#fff" />
+              <Text style={{ fontWeight: "700", color: "#86c4a" }}>
+                Move up
+              </Text>
+          </Animated.View>
+        </PanGestureHandler>
       </View>
-      {/* TODO check AnimatedLlibreManning staggered animation and replace above
-      <Animated.View {...panResponder.panHandlers} style={styles.moveUp}>
-        <Text>Move up</Text>
-      </Animated.View>
-       */}
     </Animated.View>
   );
 };
 
 const styles = StyleSheet.create({
   main: {
-    backgroundcolor: "rgba(255, 255, 255, 0.88)",
-    padding: 10,
     zIndex: 1,
     position: "absolute",
     left: 0,
@@ -129,13 +136,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   title: {
-    color: color.black,
+    color: "#86c4a",
     fontWeight: "bold",
     fontSize: 22,
     marginBottom: 10,
   },
   text: {
-    color: color.gray,
+    color: "#cebbc1",
     fontWeight: "bold",
     fontSize: 18,
     marginBottom: 10,
@@ -158,8 +165,9 @@ const styles = StyleSheet.create({
     height: 100,
     justifyContent: "center",
     alignItems: "center",
-    backgroundcolor: color.red,
     borderRadius: 50,
-    marginTop: 50,
+    marginTop: 40,
+    marginBottom: 10,
+    elevation: 5,
   },
 });

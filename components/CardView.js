@@ -31,10 +31,10 @@ const CardView = ({ card, cardSize, margin }) => {
   const { runNoMatchAnimation, noMatchAnimationStyle } = useNoMatchAnimation();
   runNoMatchAnimation.value = isNotMatched(card);
 
- const offset = useSharedValue(0);
+ const offset = useSharedValue(false);
 
   const flip = useAnimatedStyle(() => {
-    offset.value = 0;
+    offset.value = false
     return {
       transform: [
         {
@@ -54,14 +54,19 @@ const CardView = ({ card, cardSize, margin }) => {
 
   const dispatch = useDispatch();
 
+  const check = (cards) => {
+    const visibleCards = flippedCards(cards)
+    if (visibleCards.length !== 2 && notMatchedCards(cards).length == 0) {
+      return true
+    }
+    return false
+  }
+
   const onClick = (card, cards, clicks) => {
    if (card.cardState === CardState.Invisible) {
-     const visibleCards = flippedCards(cards);
 
-     if (visibleCards.length !== 2 && notMatchedCards(cards).length == 0) {
-       offset.value = Math.random();
-     }
-     console.log("onClick() card", card.cardType);
+     offset.value = check(cards)
+
      // if (!this.timer.isStarted) {
      //   this.timer.start()
      // }
@@ -73,7 +78,7 @@ const CardView = ({ card, cardSize, margin }) => {
      makeVisible(card.index, cards, dispatch);
      evaluateMatch(cards, dispatch);
    } else {
-     console.log("onClick() ignored");
+     null
    }
  };
 

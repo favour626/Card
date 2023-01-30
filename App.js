@@ -18,12 +18,16 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Provider, useDispatch, useSelector } from "react-redux";
 import { RESET_GAME, UPDATE_VISIBLE_STATE } from "./redux/actions";
 import configureStore from "./redux/store";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { runOnJS } from "react-native-reanimated";
 
 export default function App() {
   const store = configureStore();
   return (
     <Provider store={store}>
-      <Apple />
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <Apple />
+      </GestureHandlerRootView>
     </Provider>
   );
 }
@@ -63,7 +67,6 @@ function Apple() {
     });
 
   React.useEffect(() => {
-    console.log("start");
     reset();
     setTimeout(() => {
       setVisible();

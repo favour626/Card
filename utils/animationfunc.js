@@ -6,7 +6,7 @@ import {
   withTiming,
 } from "react-native-reanimated";
 
-const MATCH_STEP_DURATION = 120;
+const MATCH_STEP_DURATION = 180;
 const NO_MATCH_STEP_DURATION = 120;
 
 
