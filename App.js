@@ -1,5 +1,6 @@
 import React from "react";
 import {
+  Dimensions,
   Pressable,
   SafeAreaView,
   StatusBar,
@@ -19,7 +20,7 @@ import { Provider, useDispatch, useSelector } from "react-redux";
 import { RESET_GAME, UPDATE_VISIBLE_STATE } from "./redux/actions";
 import configureStore from "./redux/store";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { runOnJS } from "react-native-reanimated";
+import Bubble from "./components/bubble";
 
 export default function App() {
   const store = configureStore();
@@ -73,17 +74,33 @@ function Apple() {
     }, 3000);
   }, []);
 
+  const { height, width } = Dimensions.get("window");
+  const randomStart = [];
+
+  for (let i = 0; i < 2; i++) {
+    const startingXOffset = Math.round(Math.random() * width);
+    randomStart.push(startingXOffset);
+  }
+
   return (
     <SafeAreaView style={[styles.fullHeight, backgroundStyle]}>
       <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} />
 
       <LinearGradient
-        colors={[color.red, color.blue]}
+        colors={["#00ffff", color.blue]}
         useAngle={true}
-        angle={135}
+        angle={145}
         style={[styles.container]}
       >
-        <View style={styles.spaceTop} />
+        <View
+          style={{
+            flex: 3,
+            width: "100%",
+          }}
+        >
+          <Bubble />
+        </View>
+
         <View style={[styles.row1, { width: boardSize }]}>
           <Text style={[styles.title, textStyleTop]}>Tile Flipper</Text>
           <Pressable
@@ -112,33 +129,37 @@ function Apple() {
           >
             {Math.floor(clicks / 2)} moves
           </Text>
-          <Text style={[styles.textBottom, textStyleBottom]}>
-            {/* {game.timer.seconds} s */}
-          </Text>
+          {/* <Text style={[styles.textBottom, textStyleBottom]}>
+            {game.timer.seconds} s
+          </Text> */}
         </View>
         <Board cards={cards} />
-        <Pressable
-          style={({ pressed }) => [
-            styles.restartPressable,
-            {
-              backgroundColor: pressed
-                ? color.teal
-                : "rgba(255, 255, 255, 0.1)",
-            },
-          ]}
-          onPress={() => {
-            reset();
-            setTimeout(() => {
-              setVisible();
-            }, 3000);
+
+        <View
+          style={{
+            flex: 3,
+            width: "100%",
           }}
         >
-          <Text style={[textStyleTop, styles.text]}>restart</Text>
-        </Pressable>
-
-        <View style={styles.spaceBottom} />
+          <Bubble />
+        </View>
       </LinearGradient>
-
+      <Pressable
+        style={({ pressed }) => [
+          styles.restartPressable,
+          {
+            backgroundColor: pressed ? color.teal : "rgba(255, 255, 255, 0.1)",
+          },
+        ]}
+        onPress={() => {
+          reset();
+          setTimeout(() => {
+            setVisible();
+          }, 3000);
+        }}
+      >
+        <Text style={[textStyleTop, styles.text]}>restart</Text>
+      </Pressable>
       {completed && (
         <WinOverlayTouch
           onClose={() => {
@@ -176,11 +197,17 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     paddingHorizontal: GAP_SIZE,
+    zIndex: 1,
+    position: "absolute",
+    top: "10%",
   },
   row2: {
     flexDirection: "row",
     justifyContent: "flex-end",
     paddingHorizontal: GAP_SIZE,
+    zIndex: 1,
+    position: "absolute",
+    top: "15%",
   },
   title: {
     textAlignVertical: "center",
@@ -202,9 +229,13 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   restartPressable: {
-    marginTop: 10,
+    zIndex: 1,
+    position: "absolute",
+    left: "40%",
+    bottom: "10%",
     justifyContent: "center",
-    alignContent: "center",
+    alignItems: "center",
+    marginTop: 10,
     paddingHorizontal: 11,
     paddingVertical: 7,
     borderWidth: 2,
