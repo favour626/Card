@@ -1,11 +1,16 @@
 import { useDispatch } from "react-redux";
 
 export const RESET_GAME = "RESET_GAME";
+export const RESET_GAME_MEDIUM = "RESET_GAME_MEDIUM";
+export const RESET_GAME_HARD = "RESET_GAME_HARD";
 export const SELECT_TILE = "SELECT_TILE";
 export const UPDATE_CARD_STATE = "UPDATE_CARD_STATE";
 export const COMPLETED = "COMPLETED";
 export const UPDATE_CLICK_STATE = "UPDATE_CLICK_STATE";
 export const UPDATE_VISIBLE_STATE = "UPDATE_VISIBLE_STATE";
+export const TYPE = "TYPE";
+export const ACTION = "ACTION";
+
 
 
  // add point for player 1, redo later
