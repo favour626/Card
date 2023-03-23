@@ -36,6 +36,10 @@ https://user-images.githubusercontent.com/76729273/216841199-1bd21c28-d881-4bcb-
   - Android: [Client Android](https://play.google.com/store/apps/details?id=host.exp.exponent&referrer=blankexample)
   - Web: Any web browser
 
+## How to play
+
+Click to turn the tiles and try to finish in as little time as possible for the highest possible score
+
 ## Adding Native Code
 
 This project can be run from a web browser or the Expo client app. You may find that you want to add more native code later on. You can do this by ejecting the project and rebuilding it yourself.
